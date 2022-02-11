@@ -1,0 +1,34 @@
+const Sequelize = require('sequelize')
+const client = new Sequelize(process.env.DATABASE_URL || 'postgres://localhost/acme_bookmarks')
+const { db, Bookmark } = require('./db')
+const express = require ('express')
+const { request } = require('express')
+const app = express()
+
+
+app.get('/', async (req, res, next) =>{
+    try{
+        const data = await Bookmark.findAll()
+        const html = `<html><body>${data.map(val => `<ul>${val.name} <a href='/categories/${val.category}'> ${val.category}</a></ul>`).join('')}</body></html>`
+        res.send(html)
+    }
+    catch(ex){
+        next(ex)
+    }
+
+})
+app.get('/categories/:category', async(req, res, next) => {
+    try{
+        const category = req.params.category
+        const data = await Bookmark.findAll({
+            where: { category }
+        })
+        const html = data.map(val => `<ul>${val.name}</ul>`).join('')
+        res.send(html)
+    }
+    catch(ex){
+        next(ex)
+    }
+})
+
+app.listen(3000,() => console.log('Connected'))
